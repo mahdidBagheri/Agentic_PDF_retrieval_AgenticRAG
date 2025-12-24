@@ -61,37 +61,6 @@ The screenshot above shows:
 - AI response grounded in documents (green text)
 - Input box for follow-up questions
 
----
-
-## Project Structure
-
-```
-.
-├── src/
-│   ├── ingestion/
-│   │   └── ingestor.py          # Document loading & vector creation
-│   ├── retrieval/
-│   │   └── retriever.py         # FAISS-based retrieval
-│   ├── rag/
-│   │   └── nodes.py             # RAG graph / answer node
-│   ├── llm/
-│   │   └── gemini_client.py     # Gemini wrapper
-│   ├── prompts/
-│   │   └── rag_prompt.py        # Prompt builder
-│   ├── ui/
-│   │   └── app.py               # Desktop UI
-│   └── config.py                # Central configuration
-│
-├── vectorstore/
-│   └── faiss/                   # Persisted FAISS index
-├── assets/
-│   └── ui.png                   # UI screenshot
-├── README.md
-└── requirements.txt
-```
-
----
-
 ## Setup Instructions
 
 ### 1. Clone the Repository
@@ -130,10 +99,10 @@ set GEMINI_API_KEY=your_api_key_here
 ## Running the Application
 
 ```
-python src/ui/app.py
+python src/ui/main_window.py
 ```
 
-1. Upload documents to populate the knowledge base.
+1. Upload documents to populate the knowledge base as PDF files.
 2. Ask questions in the chat.
 3. Receive grounded answers backed by your documents.
 
