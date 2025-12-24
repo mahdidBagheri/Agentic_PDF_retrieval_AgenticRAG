@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 # Assuming ingestion logic exists or we wrap it here
 from src.ingestion.ingestor import ingest_pdf
 from src.graph.graph import app as rag_graph
+from src.retrieval.retriever import Retriever # Make sure this import is correct
 
 
 class AppController:
@@ -13,6 +14,20 @@ class AppController:
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.upload_dir = "data/uploads"
         os.makedirs(self.upload_dir, exist_ok=True)
+        # --- FIND AND CHANGE THIS PART ---
+        try:
+            # OLD CODE probably looked like this:
+            # self.retriever = Retriever(index_path=..., embed_dim=384)
+
+            # NEW, SIMPLIFIED CODE:
+            self.retriever = Retriever()
+
+        except FileNotFoundError as e:
+            print(f"Controller Info: {e}")
+            # It's okay if it doesn't exist on first launch.
+            # We'll handle this in the UI.
+            self.retriever = None
+
 
     def submit_query(self, query, callback):
         """Runs the LangGraph pipeline in a background thread."""

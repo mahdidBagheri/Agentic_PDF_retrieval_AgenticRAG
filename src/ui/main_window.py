@@ -1,19 +1,23 @@
 import sys
+# 1. PyQt imports MUST come first
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTextEdit, QLineEdit, QPushButton, QLabel, QFileDialog, QListWidget,
     QTabWidget, QProgressBar
 )
-from PyQt5.QtGui import QFontDatabase  # ✅ REQUIRED
+from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtCore import Qt, pyqtSignal, QObject
-from src.app_controller import AppController
+
+# 2. Then qt_material
 from qt_material import apply_stylesheet
 
+# 3. Then your app logic
+from src.app_controller import AppController
 
-# Signal helper to update UI from background threads safely
 class WorkerSignals(QObject):
-    update_chat = pyqtSignal(str, str)  # sender, message
-    update_status = pyqtSignal(str)
+    update_chat = pyqtSignal(str, str)  # For Chat messages
+    update_status = pyqtSignal(str)  # For Status bar
+    upload_finished = pyqtSignal(str)  # ✅ NEW: For Upload completion
 
 
 class RAGApp(QMainWindow):
@@ -22,9 +26,12 @@ class RAGApp(QMainWindow):
         self.controller = AppController()
         self.signals = WorkerSignals()
 
-        # Connect signals
+        # --- Connect Signals to UI Updates ---
         self.signals.update_chat.connect(self.append_message)
         self.signals.update_status.connect(self.update_status_label)
+
+        # ✅ Connect the new upload signal to the UI updater
+        self.signals.upload_finished.connect(self.finalize_upload_ui)
 
         self.setWindowTitle("RAG Knowledge Assistant")
         self.setGeometry(100, 100, 900, 700)
@@ -50,12 +57,10 @@ class RAGApp(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        # Chat History
         self.chat_display = QTextEdit()
         self.chat_display.setReadOnly(True)
         layout.addWidget(self.chat_display)
 
-        # Input Area
         input_layout = QHBoxLayout()
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("Ask a question about your documents...")
@@ -77,17 +82,14 @@ class RAGApp(QMainWindow):
         layout.addWidget(QLabel("<h2>Upload Documents</h2>"))
         layout.addWidget(QLabel("Add PDFs to the knowledge base here."))
 
-        # Upload Button
         upload_btn = QPushButton("Select PDF")
         upload_btn.clicked.connect(self.handle_upload)
         layout.addWidget(upload_btn)
 
-        # Ingestion Progress (Visual only for now)
         self.progress = QProgressBar()
         self.progress.setValue(0)
         layout.addWidget(self.progress)
 
-        # Log area
         self.log_display = QListWidget()
         layout.addWidget(self.log_display)
 
@@ -104,10 +106,10 @@ class RAGApp(QMainWindow):
         self.input_field.clear()
         self.status_label.setText("Thinking...")
 
-        # Call backend
         self.controller.submit_query(query, self.on_query_complete)
 
     def on_query_complete(self, answer):
+        # Background thread calls this -> Emits signal -> Main thread updates UI
         self.signals.update_chat.emit("Bot", answer)
         self.signals.update_status.emit("Ready")
 
@@ -115,7 +117,6 @@ class RAGApp(QMainWindow):
         color = "#4caf50" if sender == "Bot" else "#2196f3"
         formatted = f'<div style="margin-bottom: 10px;"><b><span style="color:{color};">{sender}:</span></b><br>{text}</div>'
         self.chat_display.append(formatted)
-        # Scroll to bottom
         cursor = self.chat_display.textCursor()
         cursor.movePosition(cursor.End)
         self.chat_display.setTextCursor(cursor)
@@ -124,23 +125,35 @@ class RAGApp(QMainWindow):
         self.status_label.setText(text)
 
     def handle_upload(self):
-        fname, _ = QFileDialog.getOpenFileName(self, 'Open PDF', '/home', "PDF Files (*.pdf)")
+        fname, _ = QFileDialog.getOpenFileName(self, 'Open PDF', '', "PDF Files (*.pdf)")
         if fname:
             self.log_display.addItem(f"Uploading: {fname}...")
             self.progress.setValue(20)
             self.status_label.setText("Ingesting...")
+            # Start background task
             self.controller.upload_file(fname, self.on_upload_complete)
 
     def on_upload_complete(self, message):
+        """
+        Runs on Background Thread.
+        CANNOT touch UI directly. Must emit signal.
+        """
+        self.signals.upload_finished.emit(message)
+        self.signals.update_status.emit("Ready")
+
+    def finalize_upload_ui(self, message):
+        """
+        Runs on Main UI Thread.
+        Safe to update widgets.
+        """
         self.log_display.addItem(message)
         self.progress.setValue(100)
-        self.signals.update_status.emit("Ready")
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # Apply a modern dark theme
+    # Theme applied cleanly
     apply_stylesheet(app, theme='dark_teal.xml')
 
     window = RAGApp()

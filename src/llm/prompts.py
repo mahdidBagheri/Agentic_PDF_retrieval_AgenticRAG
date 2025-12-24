@@ -1,6 +1,6 @@
 def build_rag_prompt(query: str, contexts: list) -> str:
     context_text = "\n\n".join(
-        f"[Source: {c['source']} | Page {c['page']}]\n{c['text']}"
+        f"[Source: {c}"
         for c in contexts
     )
 

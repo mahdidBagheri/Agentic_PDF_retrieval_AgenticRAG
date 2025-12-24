@@ -3,12 +3,12 @@ from llm.gemini_client import GeminiClient
 from llm.prompts import build_rag_prompt
 from llm.compressor import ContextCompressor
 
-
-INDEX_PATH = "vectorstore/faiss"
+import os
+INDEX_PATH = os.path.join(os.getcwd(), "vectorstore", "faiss")
 
 
 def main():
-    retriever = Retriever(INDEX_PATH)
+    retriever = Retriever()
     llm = GeminiClient()
 
     while True:

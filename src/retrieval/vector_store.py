@@ -10,7 +10,7 @@ class VectorStore:
     def __init__(self, dim: int, index_path: str):
         self.dim = dim
         self.index_path = index_path
-        self.index_file = os.path.join(index_path, "index.faiss")
+        self.index_file = os.path.join(index_path, "metadata.faiss")
         self.meta_file = os.path.join(index_path, "metadata.pkl")
 
         self.index = faiss.IndexFlatIP(dim)

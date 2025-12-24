@@ -1,2 +1,4 @@
-GEMINI_API_KEY = "AIzaSyCq2he0_ciUeYtH2KD88p8o5_sGxn2igrI"
-VECTORSTORE_PATH = "../vectorstore/faiss"
+import os
+GEMINI_API_KEY = "AIzaSyC0HMbuiSXiCY1p-KADIZIsV9LVsaPK4i4"
+VECTORSTORE_PATH =  os.path.join(os.getcwd(), "vectorstore", "faiss")
+INDEX_NAME = "metadata"

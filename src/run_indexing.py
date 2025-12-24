@@ -2,9 +2,10 @@ import json
 from embeddings.embedder import Embedder
 from retrieval.vector_store import VectorStore
 
-
+import os
 CHUNKS_PATH = "../data/chunks/all_chunks.json"
-INDEX_PATH = "vectorstore/faiss"
+INDEX_PATH = os.path.join(os.getcwd(), "vectorstore", "faiss")
+
 EMBED_DIM = 384
 
 
